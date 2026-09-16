@@ -1,0 +1,18 @@
+User-agent: *
+Allow: /
+
+# Disallow admin and private
+Disallow: /admin
+Disallow: /dashboard
+Disallow: /api/
+
+# Sitemap
+Sitemap: https://codemasterpro.in/sitemap.xml
+Sitemap: https://codemasterpro.in/api/sitemap.xml
+
+# For AdSense - allow adsbot
+User-agent: AdsBot-Google
+Allow: /
+
+User-agent: Mediapartners-Google
+Allow: /

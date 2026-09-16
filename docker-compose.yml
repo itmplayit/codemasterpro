@@ -1,0 +1,61 @@
+version: '3.8'
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: codemaster_mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: codemaster_pro
+      MYSQL_USER: codemaster
+      MYSQL_PASSWORD: codemaster123
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/1-schema.sql
+      - ./database/seed.sql:/docker-entrypoint-initdb.d/2-seed.sql
+      - ./database/upgrade_v3.sql:/docker-entrypoint-initdb.d/3-upgrade_v3.sql
+      - ./database/upgrade_v4.sql:/docker-entrypoint-initdb.d/4-upgrade_v4.sql
+      - ./database/upgrade_v5.sql:/docker-entrypoint-initdb.d/5-upgrade_v5.sql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: backend
+    container_name: codemaster_backend
+    environment:
+      DB_HOST: mysql
+      DB_USER: codemaster
+      DB_PASSWORD: codemaster123
+      DB_NAME: codemaster_pro
+      DB_PORT: 3306
+      JWT_SECRET: supersecret_docker_key_change_in_prod
+      PORT: 5000
+      FRONTEND_URL: http://localhost:5173
+    ports:
+      - "5000:5000"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app/backend
+      - /app/backend/node_modules
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: frontend
+    container_name: codemaster_frontend
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+
+volumes:
+  mysql_data:
